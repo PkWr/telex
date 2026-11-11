@@ -1,0 +1,509 @@
+/* Form — styled after Spot: IBM Plex Mono italic, one yellow accent, dark floating panel. Fonts: SIL OFL (vendor/fonts). */
+@font-face{font-family:"IBM Plex Mono";font-style:italic;font-weight:300;font-display:swap;src:url("vendor/fonts/ibm-plex-mono-latin-300-italic.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:italic;font-weight:400;font-display:swap;src:url("vendor/fonts/ibm-plex-mono-latin-400-italic.woff2") format("woff2")}
+:root{--yellow:#ffe100;--ink:#111;--paper:#f4f2ee;--cp-bg:#121315;--cp-surface:#17191c;--cp-line:#2a2d31;--cp-text:#ececec;--cp-muted:#a3a3a3;--cp-accent-bg:#3a3410;--cp-accent-line:#8f7d1a;--font:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{font-synthesis:none}
+body{margin:0;background:var(--paper);color:var(--ink);font:300 13px/1.5 var(--font);font-style:italic}
+h1,h2{font-weight:400;margin:0}
+svg{display:block}
+#out{padding:24px 412px 48px 24px;min-height:100vh}
+#out h2{font-size:12px;margin:28px 0 8px;color:#555}
+#anim{width:100%;max-height:62vh;background:var(--paper)}
+#sheet svg{width:100%;height:auto}
+#panel{position:fixed;top:16px;right:16px;bottom:16px;width:380px;max-width:calc(100vw - 32px);overflow:auto;padding:16px;background:var(--cp-bg);color:var(--cp-text);border:1px solid var(--cp-line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:30}
+#panel.hidden{display:none}
+#panel h1{font-size:15px}
+.sub{margin:0 0 14px;color:var(--cp-muted);font-size:12px}
+#grid{width:100%;height:auto;background:var(--cp-surface);border:1px solid var(--cp-line);border-radius:6px;cursor:pointer;touch-action:manipulation}
+#palette{display:flex;gap:8px;margin:12px 0}
+#palette button{width:44px;height:44px;padding:8px;background:none;border:0;border-radius:0;color:var(--cp-text)}
+#palette svg{fill:var(--cp-text);width:100%;height:100%}
+#palette button[aria-checked=true] svg{fill:var(--yellow)}
+label{display:block;margin:6px 0;color:var(--cp-muted);font-size:12px}
+label.inline{display:inline-block;margin-right:16px;color:var(--cp-text)}
+output{float:right;color:var(--cp-text)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:0;background:none;cursor:pointer;--to:0%}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--yellow) 0 var(--to),#33363b var(--to) 100%)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--yellow) 0 var(--to),#33363b var(--to) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-8px;border:0;border-radius:10px;background:#f4f4f4;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:10px;background:#f4f4f4;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+input[type=number]{width:80px;font:inherit;color:var(--cp-text);background:var(--cp-surface);border:1px solid var(--cp-line);border-radius:6px;padding:4px 6px}
+input[type=radio]{accent-color:var(--yellow)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+button{font:inherit;padding:7px 12px;border:1px solid var(--cp-line);border-radius:8px;background:var(--cp-surface);color:var(--cp-text);cursor:pointer}
+button:hover{border-color:var(--cp-accent-line)}
+#process{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+#out .row button{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#msg{min-height:1.4em;color:var(--yellow);font-size:12px}
+.hint{color:var(--cp-muted);font-size:11px;margin:8px 0 0}
+@media(max-width:900px){#out{padding:24px 24px 48vh}#panel{top:auto;height:44vh}}
+.cp-grab{display:none}
+#screen{display:none}
+.draw-shapes .row{margin:0 0 12px}
+/* Phones / touch: the grid and the shapes sit on the screen; the controls are a short bottom sheet (grab handle, settings, Process always in reach), as in Spot. */
+@media all{
+#screen{display:block;padding:16px 16px 0}
+#paneSwitch{margin:0 0 10px;font-size:13px}
+#paneSwitch a{color:#555}
+#paneSwitch a[aria-checked=true]{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+#drawBox .sub{margin:0 0 8px;color:#555}
+#drawBox #grid{width:100%}
+.draw-shapes{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+.draw-shapes #palette{margin:0;gap:6px}
+.draw-shapes .row{margin:0;flex-wrap:nowrap}
+#screen #palette button{background:#e3dfd8;border-radius:8px}
+#screen #palette svg{fill:var(--ink)}
+#screen #palette button[aria-checked=true]{background:var(--ink)}
+#screen #palette button[aria-checked=true] svg{fill:var(--yellow)}
+#screen .row button{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#screen .hint{color:#555;margin:6px 0 0}
+body:not(.view-results) #out{display:none}
+body.view-results #drawBox{display:none}
+#out{padding:0 16px 16px}
+#out h2:first-child{margin-top:8px}
+#panel{display:flex;flex-direction:column;overflow:hidden;top:auto;left:0;right:0;bottom:0;width:auto;max-width:none;height:auto;max-height:min(62vh,540px);padding:0;border-width:1px 0 0;border-radius:20px 20px 0 0}
+#panel.collapsed .cp-body{display:none}
+.cp-grab{flex:none;display:flex;align-items:center;justify-content:center;width:100%;height:26px;margin:0;padding:0;border:0;border-radius:20px 20px 0 0;background:var(--cp-bg);cursor:pointer}
+.cp-grab span{display:block;width:40px;height:5px;border-radius:3px;background:#4a4d52}
+.cp-head{display:none}
+.cp-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 16px 8px}
+.cp-foot{flex:none;padding:8px 16px max(6px,env(safe-area-inset-bottom));border-top:1px solid var(--cp-line)}
+#processRow .row{margin:0 0 4px}
+#processRow #process{width:100%;padding:12px}
+#screen #processRow{margin:4px 0 8px}
+#screen #process{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+#screen #msg{color:var(--ink)}
+#msg{min-height:0;margin:2px 0}
+.cp-foot .hint{margin:4px 0 0}
+.keys{display:none}
+}
+.links{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0;font-size:13px;color:var(--cp-muted)}
+.links a{color:var(--cp-text);text-decoration:none}
+.links a:hover{text-decoration:underline}
+.links a[aria-checked=true]{color:var(--yellow)}
+.about{max-width:640px;margin:0 auto;padding:40px 24px 80px}
+.about h1{font-size:22px;margin:16px 0}
+.about h2{font-size:13px;margin:28px 0 6px;color:#555}
+.about p{margin:0 0 12px;font-size:14px;line-height:1.6}
+.about a{color:var(--ink)}
+.about table.details{border-collapse:collapse;margin:0 0 12px;font-size:14px;line-height:1.6}
+.about table.details th,.about table.details td{padding:2px 16px 2px 0;text-align:left;vertical-align:top;font-weight:400}
+.about table.details th{color:#555;white-space:nowrap}
+.about .n{display:inline-block;width:2.2em;text-indent:0}
+.about .foot{margin-top:40px;font-size:12px;color:#555}
+.hint a{color:var(--yellow)}
+.about .s{margin:0 0 4px;padding-left:2.4em;text-indent:-2.4em}
+.hint2{margin:0 0 8px;font-size:12px;color:#555}
+.about ul{margin:0 0 12px;padding-left:1.2em;font-size:14px;line-height:1.6}
+
+/* Start screen, as on Spot: black, a round open button, the version bottom left, an About drawer under a yellow strip. */
+#startScreen{display:none}
+html.show-start{overflow:hidden}
+html.show-start #startScreen{display:flex;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;overflow:hidden;background:#000;transition:opacity .5s ease;--strip-w:44px;--panel-w:max(320px,calc(100vw / 3 - var(--strip-w)))}
+html.start-leaving #startScreen{opacity:0;pointer-events:none}
+#startLoop{position:absolute;inset:6vmin;width:calc(100% - 12vmin);height:calc(100% - 12vmin)}
+#startLoop{pointer-events:none} /* only the blocks themselves are live, so the rollover and the click start where the shape is, not in the empty area round it */
+#startLoop use{pointer-events:auto;cursor:pointer}
+#startLoop:hover #startLoopG{fill:var(--yellow)}
+#startLoop:hover use{stroke:var(--yellow)}
+/* The way in is the open button in the About panel; this one stays for keyboards (Enter) and screen readers. */
+#startOpen{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0;opacity:0}
+.start-version{position:fixed;left:16px;bottom:max(12px,env(safe-area-inset-bottom));z-index:3;font-size:11px;color:rgba(255,255,255,.55);text-decoration:none}
+.start-version:hover,.start-version:focus-visible{color:var(--yellow);outline:none}
+.start-drawer{position:fixed;top:0;right:0;bottom:0;z-index:3;display:flex;transform:translateX(var(--panel-w));transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.start-drawer.is-open{transform:translateX(0)}
+.start-strip{width:var(--strip-w);flex-shrink:0;margin:0;padding:22px 0;border:0;border-radius:0;background:var(--yellow);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between;box-shadow:-10px 0 30px rgba(0,0,0,.22);transition:background-color .5s ease}
+.start-drawer.is-open .start-strip{background:#fff}
+.start-strip:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.strip-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.strip-icon{font-size:22px;line-height:1;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
+.start-drawer.is-open .strip-icon{transform:rotate(45deg)}
+@media(prefers-reduced-motion:no-preference){.start-drawer:not(.is-open) .strip-icon{animation:form-nudge 2.4s ease-in-out 1.2s 2}}
+@keyframes form-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}
+@media(prefers-reduced-motion:reduce){html.show-start #startScreen,#startOpen span,.sa-open,.start-drawer,.strip-icon{transition:none}}
+.start-panel{width:var(--panel-w);max-width:calc(100vw - var(--strip-w));background:#fff;color:var(--ink);overflow-y:auto;display:flex;flex-direction:column}
+.sa-content{padding:28px 28px 8px}
+.sa-content h1{margin:0 0 14px;font-size:clamp(30px,2.6vw,42px);line-height:1;letter-spacing:-.03em;font-weight:300}
+.sa-content h2{margin:22px 0 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b6862}
+.sa-content p{margin:0 0 .9em;font-size:13px;line-height:1.6}
+.sa-content .s{margin:0 0 4px;padding-left:2.4em;text-indent:-2.4em}
+.sa-content .n{display:inline-block;width:2.2em;text-indent:0}
+.sa-content a,.sp-foot a{color:inherit;text-underline-offset:3px}
+.sa-content a:hover,.sa-content a:focus-visible,.sp-foot a:hover,.sp-foot a:focus-visible{background:var(--yellow);outline:none}
+.sp-foot{margin-top:auto;padding:16px 28px 22px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#6b6862}
+/* Phones and narrow windows: the panel covers the circle, so it carries its own open circle, the first paragraph first, "More" to unfold. */
+.sa-lead,.sa-open-end{display:none}
+.sa-open{flex:none;width:92px;height:92px;border-radius:0;transform:rotate(-8deg);border:0;padding:0;background:var(--ink);color:#fff;font:italic 400 17px var(--font);cursor:pointer;transition:transform .35s cubic-bezier(.2,.7,.2,1),background-color .15s ease,color .15s ease}
+.sa-open:hover,.sa-open:focus-visible{transform:rotate(0deg)}
+.sa-open:active{transform:rotate(0deg) scale(.94)}
+.sa-open:hover,.sa-open:active,.sa-open:focus-visible{background:var(--yellow);color:var(--ink);outline:none}
+.sa-more{border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* Wide windows: the full text always shows, with an open at the top (under the opening lines) and another at the end. */
+@media(min-width:761px){.sa-lead{display:flex;margin:4px 0 20px}.sa-more{display:none}.sa-open-end{display:block;margin:8px 0 28px}}
+@media(max-width:760px){
+.sa-lead{display:flex;align-items:center;gap:22px;margin:4px 0 28px}
+.sa-open-end{display:block;margin:8px 0 28px}
+.sa-content.is-short .sa-lead ~ :not(.sa-open-end){display:none}
+.sa-content.is-short .sa-open-end{display:none}
+}
+#out .links{color:#555}
+#out .links a{color:#555}
+#out .links a[aria-checked=true]{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+#sheet svg{max-width:100%}
+.sa-content ul{list-style:none;margin:0 0 .9em;padding:0;border-top:1px solid var(--ink);font-size:12px}
+.sa-content li{padding:8px 0;border-bottom:1px solid #d9d5ce;line-height:1.5}
+#pieceNote{padding:24px 412px 0 24px;font-size:12px;line-height:1.6;color:#333}
+#pieceNote p{margin:0 0 8px;max-width:720px;overflow-wrap:anywhere}
+#pieceNote a{color:inherit;text-underline-offset:3px}
+@media(max-width:900px){#pieceNote{padding-right:24px}}
+@media all{#pieceNote{padding:16px 16px 0}}
+#screen label{color:#555}
+#out label.inline{color:#231F20}
+#out input[type=checkbox]{accent-color:var(--ink)}
+#out label.msg{display:block;margin:10px 0 6px;color:#555;font-size:12px}
+#out textarea{display:block;width:100%;max-width:520px;margin-top:4px;font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:6px;padding:6px 8px;resize:vertical}
+.step{display:none}
+.step.on{display:block}
+#steps{margin:0 0 6px}
+#out h2{margin-top:12px}
+.row.nav{margin-top:18px}
+.row.nav .next{background:var(--ink);color:var(--paper);padding:10px 16px;font-size:14px}
+.row.nav .back{background:transparent;color:var(--ink);border-color:var(--ink)}
+#sheet svg{display:block;margin:0 auto;width:auto;height:min(72vh,980px);max-width:100%}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:900px}
+.card{border:1px solid var(--ink);border-radius:12px;padding:14px 16px}
+.card h3{margin:0 0 6px;font-size:15px;font-weight:400}
+.card .row{margin:12px 0 0}
+#out{min-height:0}
+@media all{#sheet svg{height:max(140px,calc(100svh - 430px))}}
+/* Icon buttons: steps, rule and treatments. Quiet: the selected one is yellow on the dark panel and ink with a yellow icon on paper. */
+.links.ico{display:flex;flex-wrap:nowrap;gap:4px;margin:6px 0;font-size:9.5px;color:var(--cp-muted)}
+.ico a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:56px;padding:6px 4px 5px;border-radius:8px;text-decoration:none;color:var(--cp-text);line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.ico a svg{width:26px;height:26px;display:block}
+.ico a:hover{text-decoration:none;background:rgba(255,255,255,.07)}
+.ico a[aria-checked=true]{color:var(--yellow);text-decoration:none}
+#out .ico a,#screen .ico a{color:#555}
+#out .ico a:hover,#screen .ico a:hover{background:#e3dfd8}
+#out .ico a[aria-checked=true],#screen .ico a[aria-checked=true]{background:var(--ink);color:var(--yellow);text-decoration:none}
+#viewIcons{justify-content:space-between}
+#viewIcons a{flex:1;min-width:0}
+#steps a{flex-direction:row;gap:6px;font-size:12px;min-width:0;padding:6px 12px}
+#steps a svg{width:18px;height:18px}
+#processRow .row{align-items:stretch;flex-wrap:nowrap}
+#processRow #process{flex:1;min-width:0}
+#act{margin:0}
+#act a{min-width:58px}
+#viewHostPanel{margin:0 0 8px}
+#colours{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:10px 0 4px;color:var(--cp-muted);font-size:12px}
+#colours .swatch{display:flex;align-items:center;gap:6px;margin:0;color:var(--cp-text)}
+#colours input[type=color]{width:34px;height:26px;padding:0;border:1px solid var(--cp-line);border-radius:6px;background:none;cursor:pointer}
+#presets{display:flex;gap:8px;margin-left:auto}
+.preset{width:26px;height:26px;padding:0;border-radius:50%;border:1px solid #555;cursor:pointer}
+.shape-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px}
+.shape-row #palette{margin:0}
+.shape-row #act{margin:0}
+@media all{
+.draw-shapes{display:block}
+.shape-row{flex-wrap:nowrap;gap:8px;margin:0 0 10px}
+.draw-shapes #palette{gap:4px}
+.draw-shapes #palette button{width:40px;height:40px;padding:7px}
+.shape-row #act a{min-width:50px;padding:5px 2px 4px}
+.draw-shapes>.row{margin:0}
+}
+@media all{
+#drawBox #grid{width:auto;height:min(calc(100vw - 32px),calc(100svh - 360px));max-width:100%;margin:0 auto}
+}
+#grid{border-color:var(--cp-line)}
+/* Less scrolling: the closing step shows one choice at a time; the results sit under a shorter header on phones. */
+.card{display:none}
+.card.on{display:block}
+.checks{display:flex;flex-wrap:wrap;gap:2px 16px}
+#makeTabs{margin:4px 0 12px}
+#makeTabs a{min-width:84px}
+@media all{
+#out h2{display:none}
+body.view-results #processRow .row{display:none}
+#processRow #msg{margin:0 0 4px}
+#anim{max-height:max(150px,calc(100svh - 470px))}
+#sheet svg{height:max(200px,calc(100svh - 400px))}
+.row.nav{margin-top:10px}
+#step2 .hint2{margin:0 0 6px;font-size:11px}
+#out .links.ico{margin:4px 0}
+#viewIcons a{padding:4px 2px 3px}
+}
+.dlico{width:16px;height:16px;margin-right:7px;vertical-align:-3px;flex:none}
+#out #colours{color:#555;margin:6px 0 2px}
+#out #colours .swatch{color:#555}
+#out #colours input[type=color]{border-color:var(--ink)}
+#out .preset{border-color:var(--ink)}
+@media all{#sheet svg{height:max(140px,calc(100svh - 440px))}}
+@media(min-width:601px) and (pointer:fine){#panel #grid{width:min(100%,calc(100vh - 505px));margin:0 auto}}
+.dlico{display:inline-block}
+#out #viewIcons,#out #projIcons,#out #colours,#makeTabs{max-width:460px}
+#out #projIcons{justify-content:flex-start}
+/* Selected is always yellow. On paper a yellow word would vanish, so a selected text link there is an ink pill with yellow text, like the icon tiles. */
+#paneSwitch a,#out .links:not(.ico) a{padding:2px 10px;border-radius:999px;text-decoration:none}
+#paneSwitch a[aria-checked=true],#out .links:not(.ico) a[aria-checked=true]{background:var(--ink);color:var(--yellow);text-decoration:none}
+.preset.on{border:2px solid var(--yellow);box-shadow:0 0 0 1px var(--ink)}
+#out .preset.on,.preset.on{border-color:var(--yellow)}
+/* Desktop: the animation and the contact sheet are sized to the window so Next and Back stay in view; the icon tiles keep a steady width. */
+@media(min-width:601px) and (pointer:fine){
+#anim{max-height:max(150px,calc(100vh - 400px))}
+#sheet svg{height:max(150px,calc(100vh - 390px))}
+#viewIcons a{flex:0 1 84px}
+#viewIcons{justify-content:flex-start}
+}
+#bookPreview{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;background:#2b2b2b;color:#ececec}
+#bookPreview[hidden]{display:none}
+.bp-bar{display:flex;align-items:center;gap:16px;padding:10px 14px;border-bottom:1px solid #3d3d3d}
+.bp-bar button,.bp-nav button{background:#17191c;color:#ececec;border:1px solid #444}
+.bp-bar .ico a{flex-direction:row;padding:6px 12px;font-size:12px;min-width:0}
+.bp-bar .ico a[aria-checked=true]{background:var(--ink);color:var(--yellow)}
+.bp-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:0;padding:12px;overflow:hidden}
+.bp-stage canvas{box-shadow:0 6px 30px rgba(0,0,0,.5)}
+.bp-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 14px;border-top:1px solid #3d3d3d;font-size:12px}
+.bp-nav button:disabled{opacity:.35}
+#bookPreviewBtn{background:transparent;color:var(--ink);border-color:var(--ink)}
+/* Desktop follows the phone flow: Draw, then Results, one at a time, in a centred column. The fixed panel is gone. */
+@media(min-width:601px) and (pointer:fine){
+#screen,#out{max-width:700px;margin:0 auto}
+#panel{left:50%;right:auto;width:700px;max-width:100%;transform:translateX(-50%);border-radius:14px 14px 0 0}
+#out{padding:0 16px 16px;min-height:0}
+#drawBox #grid{width:min(100%,calc(100vh - 360px));height:auto;aspect-ratio:1;margin:0 auto;display:block}
+}
+/* Five steps in one row of equal tiles, icon above a short label. */
+#steps{display:flex;gap:4px}
+#steps a{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;font-size:11px;text-align:center;word-break:normal}
+#steps a svg{width:20px;height:20px}
+#steps{max-width:460px}
+/* One button system. Tool: ink, 13px (downloads, Clear, Random, Preview). Step: ink, 14px, taller (Next). Go: yellow, same size as Step (the make button). Back: outline. All 8px radius, same line height. */
+#screen .row button,#out .row button{font-size:13px;line-height:1.2;padding:8px 14px;min-height:38px}
+#screen .row.nav button,#out .row.nav button,#process{font-size:14px;line-height:1.2;padding:10px 16px;min-height:44px}
+#out .row.nav .back{background:transparent;color:var(--ink);border-color:var(--ink)}
+.row.nav{align-items:center}
+button#process,#processRow .row button{font-size:14px;line-height:1.2;padding:10px 16px;min-height:44px}
+/* Grid size sits under the grid on the screen, styled like the other text choices: selected is an ink pill with yellow text. */
+#screen #size{color:#555;margin:8px 0 0;font-size:13px}
+#screen #size a{color:#555;padding:2px 10px;border-radius:999px;text-decoration:none}
+#screen #size a[aria-checked=true]{background:var(--ink);color:var(--yellow)}
+/* Animation speed in the results step: ink on paper like the rest. */
+#spdHostOut label{display:block;color:#555;margin:10px 0 0;font-size:13px}
+#spdHostOut output{float:right;color:var(--ink)}
+#spdHostOut input[type=range]{width:100%;accent-color:var(--ink)}
+/* The rule is a screen of its own, after drawing and before the results. */
+#ruleBox h2{margin:6px 0 10px;font-size:15px;font-weight:400}
+#ruleBox #act{margin:0 0 6px}
+body:not(.step-rule) #ruleBox{display:none}
+body.step-rule #drawBox #size,body.step-rule #drawBox .draw-shapes,body.step-rule #drawBox .hint,body.step-rule #drawNav{display:none}
+#screen .row.nav .back{background:transparent;color:var(--ink);border-color:var(--ink)}
+/* The rule screen shows a preview of the outcome instead of the grid; Back returns to the grid to edit. */
+body.step-rule #drawBox #grid{display:none}
+#rulePreview{display:block;width:100%;height:clamp(180px,38vh,360px);margin:0 0 10px;border:1px solid var(--ink);border-radius:8px;background:var(--paper)}
+/* Results (animation, sheet) come first; Outputs (print, GIF, book) are a screen of their own after them. */
+body:not([data-step="1"]):not([data-step="2"]) #viewHostOut{display:none}
+/* Step by step: the step line shows where you are; there are no tabs to jump ahead, and the icon row is a marker, not a menu. */
+#paneSwitch{margin:0 0 10px;font-size:13px;color:#555}
+#steps{pointer-events:none}
+/* Keep each step on one screen. The animation gives up height on desktop for its controls; on short phones the card's explanatory text steps aside (the step line already names the card). */
+@media(min-width:601px) and (pointer:fine){#anim{max-height:max(140px,calc(100vh - 470px))}}
+@media(max-height:700px){.card .hint2,.card h3{display:none}#personalMsg{height:2.4em}}
+/* On Draw the controls share a row (and wrap only when the screen is too narrow): shapes, grid size, then Clear and Random symbol. */
+.draw-ui{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin:8px 0}
+.draw-ui .draw-shapes,.draw-ui .shape-row{display:contents}
+.draw-ui #palette{order:1;margin:0}
+.draw-ui #size{order:2;margin:0}
+.draw-ui .draw-shapes>.row{order:3;margin:0;flex-wrap:nowrap}
+.draw-ui{gap:8px 12px}
+.draw-ui #size a{padding:2px 7px}
+/* Grid size sits above the grid it changes. */
+#drawBox>#size{margin:0 0 8px;font-size:13px;color:#555}
+#drawBox>#size a{padding:2px 8px;border-radius:999px;color:#555;text-decoration:none}
+#drawBox>#size a[aria-checked=true]{background:var(--ink);color:var(--yellow)}
+@media(max-height:700px){#drawBox #grid{width:min(100%,calc(100svh - 348px));margin-left:auto;margin-right:auto;display:block}}
+/* Shapes, Clear and Random share one row, on phones too. */
+.draw-ui{gap:8px}
+.draw-ui .draw-shapes>.row{gap:6px}
+.draw-ui .draw-shapes>.row button{padding:8px 11px}
+@media(max-width:600px){.draw-ui #palette{gap:4px}.draw-ui #palette button{width:36px;height:36px;padding:6px}}
+/* No rule step any more: the yellow button is on Draw, and the output holds both the making and the unmaking. */
+body.view-results #processRow .row{display:none}
+/* Step icons: Animation, Sheet, GIF, Book. Animation is the result; the rest are outputs. */
+body:not(.view-outputs) #steps a[data-s="2"],body:not(.view-outputs) #steps a[data-s="3"],body:not(.view-outputs) #steps a[data-s="4"],body.view-outputs #steps a[data-s="1"]{display:none}
+/* Downloads are icons opposite the step number, and only the ones for this step show. */
+#paneSwitch{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:40px}
+#dlBar{display:flex;gap:6px}
+#dlBar .dlbtn{display:none;flex-direction:column;align-items:center;gap:1px;padding:4px 10px;min-height:0;font-size:10px;line-height:1.1;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:8px}
+#dlBar .dlbtn svg{width:18px;height:18px}
+body[data-step="1"] #dlBar [data-for="1"],body[data-step="2"] #dlBar [data-for="2"],body[data-step="3"] #dlBar [data-for="3"]{display:flex}
+/* The animation sits in the same square, with the same outline, as the grid on Draw. */
+#anim{display:block;width:min(100%,calc(100vh - 360px));max-height:none;height:auto;aspect-ratio:1;margin:0 auto;border:1px solid var(--cp-line);border-radius:6px}
+@media(max-height:700px){#anim{width:min(100%,calc(100svh - 348px))}}
+/* The print size sits with the download icon it belongs to: under it, right-aligned, on the Contact sheet step only. */
+#paneSwitch{flex-wrap:wrap}
+/* Downloads sit at the right of Back and Next, with the print size just left of its icon. */
+.row.nav{flex-wrap:wrap;align-items:center}
+.row.nav #dlWrap{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#dlWrap #paper{display:none;margin:0;font-size:13px;flex:0 0 auto}
+body[data-step="2"] #dlWrap #paper{display:flex}
+#paneSwitch #dlWrap{display:none}
+/* Phones: the icon stays on the line of Back and Next; the print size sits on its own line just above it, right-aligned. */
+.row.nav #dlWrap{display:contents}
+.row.nav #dlBar{margin-left:auto}
+.row.nav #dlWrap #paper{order:-1;flex:0 0 100%;justify-content:flex-end;margin:0 0 4px}
+#out .row.nav #dlBar .dlbtn{font-size:10px;line-height:1.1;padding:4px 10px;min-height:0}
+#out .row.nav #dlBar{gap:4px}
+#out .row.nav #dlBar .dlbtn{padding:4px 6px;min-width:40px}
+/* The animation's format is a choice, shown like the print size: on its own line above the icon. */
+#dlWrap #animFormat{display:none;margin:0;font-size:13px;flex:0 0 auto}
+body[data-step="1"] #dlWrap #animFormat{display:flex}
+.row.nav #dlWrap #animFormat{order:-1;flex:0 0 100%;justify-content:flex-end;margin:0 0 4px}
+/* The Book step: the book as a visual in the same square and outline as the animation, its choices above the download. */
+#bookFrame{display:flex;align-items:center;justify-content:center;width:min(100%,calc(100vh - 360px));aspect-ratio:1;margin:0 auto;border:1px solid var(--cp-line);border-radius:6px;background:var(--paper);cursor:pointer}
+@media(max-height:700px){#bookFrame{width:min(100%,calc(100svh - 348px))}}
+#bookPages{display:flex;align-items:center;justify-content:center}
+#bookPages canvas{display:block;box-shadow:0 1px 6px rgba(0,0,0,.25)}
+#dlWrap #bookInclude,#dlWrap #bookFormat{display:none;margin:0;font-size:13px;flex:0 0 auto}
+body[data-step="3"] #dlWrap #bookInclude,body[data-step="3"] #dlWrap #bookFormat{display:flex}
+.row.nav #dlWrap #bookInclude,.row.nav #dlWrap #bookFormat{order:-1;flex:0 0 100%;justify-content:flex-end;margin:0 0 4px}
+.row.nav #dlWrap #bookInclude{order:-2}
+#bookInclude a[aria-checked=true]{background:var(--ink);color:var(--yellow)}
+/* The download is a plain icon at the end of its choice row (Format or Size), not a box. */
+.row.nav #dlBar{margin-left:0}
+#dlBar{display:inline-flex;margin-left:4px}
+#out #dlBar .dlbtn,#out .row.nav #dlBar .dlbtn{background:none;color:var(--ink);border:0;padding:2px 4px;min-width:0;min-height:0;font-size:0;line-height:0}
+#out #dlBar .dlbtn:hover svg{opacity:.6}
+#dlBar .dlbtn svg{width:26px;height:26px}
+/* The download choice and its icon share the row with Back and Next, at its right. The words Format and Size step aside to leave room. */
+.row.nav #dlWrap #animFormat,.row.nav #dlWrap #paper,.row.nav #dlWrap #bookFormat{order:0;flex:0 0 auto;margin:0 0 0 auto;gap:2px}
+.row.nav #dlWrap #animFormat>span,.row.nav #dlWrap #paper>span,.row.nav #dlWrap #bookFormat>span{display:none}
+.row.nav{gap:6px}
+.row.nav #dlWrap #animFormat a,.row.nav #dlWrap #paper a,.row.nav #dlWrap #bookFormat a{padding:2px 8px}
+/* The treatment icons are larger, easier to read and to hit. */
+#viewIcons{font-size:11.5px}
+#viewIcons a{padding:9px 2px 7px;gap:5px}
+#viewIcons a svg{width:40px;height:40px}
+/* The words Format and Size step aside; the download icon inside the choice must stay. */
+.row.nav #dlWrap #animFormat>span:first-child,.row.nav #dlWrap #paper>span:first-child,.row.nav #dlWrap #bookFormat>span:first-child{display:inline}
+.row.nav #dlWrap #animFormat>span,.row.nav #dlWrap #paper>span,.row.nav #dlWrap #bookFormat>span{display:inline-flex}
+.row.nav #dlWrap #animFormat>span:first-child,.row.nav #dlWrap #paper>span:first-child,.row.nav #dlWrap #bookFormat>span:first-child{display:none}
+/* The download choices are plain words; the chosen one is underlined in yellow, not set in a pill. */
+#out #animFormat a,#out #paper a,#out #bookFormat a,#out #bookInclude a{background:none;color:#555;padding:2px 6px;border-radius:0;text-decoration:none}
+#out #animFormat a[aria-checked=true],#out #paper a[aria-checked=true],#out #bookFormat a[aria-checked=true],#out #bookInclude a[aria-checked=true]{background:none;color:var(--ink);text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:3px;text-underline-offset:6px}
+/* Treatments: no box on the chosen one. The chosen icon is dark and its word is underlined in yellow; the others are grey. Cleaner single-shape icons, larger words. */
+#viewIcons{font-size:11.8px;gap:2px}
+#out #viewIcons a{background:none;color:#7b776f;padding:6px 1px 8px;gap:6px}
+#out #viewIcons a:hover{background:none;color:#555}
+#out #viewIcons a[aria-checked=true]{background:none;color:var(--ink)}
+#out #viewIcons a[aria-checked=true] span{text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:3px;text-underline-offset:5px}
+#viewIcons a svg{width:34px;height:34px}
+/* Wide desktop: the controls sit at the side, always open, as on Spot. The bottom sheet is for phones and narrow windows. */
+@media(min-width:901px) and (pointer:fine){
+#panel{top:16px;right:16px;bottom:16px;left:auto;width:320px;max-width:none;transform:none;max-height:none;border:1px solid var(--cp-line);border-radius:14px}
+.cp-grab{display:none}
+#panel.collapsed .cp-body{display:block}
+.cp-head{display:block;padding:14px 16px 4px}
+.cp-head h1{margin:0;font-size:15px}
+body{padding-bottom:0!important;padding-right:368px}
+#screen,#out{margin-left:auto;margin-right:auto}
+}
+#shadeLab[hidden],#isoHostPanel[hidden]{display:none!important}
+/* Pieces swing past the edge of the mark while they turn, so the drawing is not clipped to its box. */
+/* Instructions for the downloads, in the control panel, for the step you are on. */
+#dlHelp{display:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--cp-line);font-size:12px;line-height:1.5;color:#9a9a9a}
+#dlHelp h2{margin:0 0 6px;font-size:12px;font-weight:400;color:#cfcfcf}
+#dlHelp p{margin:0 0 6px;display:none}
+#dlHelp p.fine{display:block;color:#7d7d7d}
+body[data-step="1"] #dlHelp,body[data-step="2"] #dlHelp,body[data-step="3"] #dlHelp{display:block}
+body[data-step="1"] #dlHelp p[data-for="1"],body[data-step="2"] #dlHelp p[data-for="2"],body[data-step="3"] #dlHelp p[data-for="3"]{display:block}
+/* The square (grid, animation, book) sits flush left with the words above it and the buttons below, not centred. */
+#drawBox #grid,#anim,#bookFrame{margin-left:0;margin-right:0}
+/* The yellow button is as wide as the grid above it. */
+button#process{width:min(100%,calc(100vh - 360px))}
+@media(max-height:700px){button#process{width:min(100%,calc(100svh - 348px))}}
+#screen #processRow .row button#process{width:min(100%,calc(100vh - 360px))}
+@media(max-height:700px){#screen #processRow .row button#process{width:min(100%,calc(100svh - 348px))}}
+#screen #processRow .row button#process{flex:0 0 auto;max-width:min(100%,calc(100vh - 360px))}
+@media(max-height:700px){#screen #processRow .row button#process{max-width:min(100%,calc(100svh - 348px))}}
+#screen #processRow .row{display:block}
+/* The yellow make button belongs to Draw only: it must not show above the results (v0.98 let it). */
+body.view-results #screen #processRow .row{display:none}
+/* Wide desktop: the same place in the side panel holds the drawing tools while you draw and the treatments once you have the results. */
+@media(min-width:901px) and (pointer:fine){
+body:not([data-step]) #viewIcons,body[data-step="0"] #viewIcons{display:none}
+body[data-step="1"] #drawTools,body[data-step="2"] #drawTools,body[data-step="3"] #drawTools{display:none}
+#panel #viewIcons{max-width:none;margin:8px 0 4px;font-size:12px;color:#9a9a9a;gap:2px}
+#panel #viewIcons a{flex:1;min-width:0;background:none;color:#8d8d8d;padding:6px 1px 8px;gap:6px}
+#panel #viewIcons a:hover{background:none;color:#cfcfcf}
+#panel #viewIcons a[aria-checked=true]{background:none;color:#fff}
+#panel #viewIcons a[aria-checked=true] span{text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:3px;text-underline-offset:5px}
+#panel #viewIcons a svg{width:30px;height:30px}
+}
+@media(min-width:901px) and (pointer:fine){
+#panel{width:340px}
+body{padding-right:388px}
+#panel #viewIcons{font-size:11px;letter-spacing:-.01em}
+}
+@media(min-width:901px) and (pointer:fine){#panel #viewIcons a span{white-space:nowrap;word-break:keep-all}#panel #viewIcons{font-size:10.5px}}
+/* Pattern code */
+#codeBox{margin:10px 0 0;font-size:12px}
+.code-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px}
+.code-row .lab{flex:0 0 auto;color:#9a9a9a}
+#codeOut{flex:1 1 auto;min-width:0;word-break:break-all;letter-spacing:.04em;color:#fff;font-style:normal}
+#codeIn{flex:1 1 90px;min-width:0;padding:5px 8px;font:inherit;color:#fff;background:#17191c;border:1px solid var(--cp-line);border-radius:8px;text-transform:uppercase}
+#codeBox button{padding:5px 10px;font-size:12px}
+#codeMsg:empty{display:none}
+
+/* Grid size lives in the control panel; the grid and the frames of the next steps share one square and one position; Next and Start again are the same yellow as the first button */
+#sizeHostPanel{margin:10px 0 4px}
+#sizeHostPanel #size{margin:0}
+#sheet{display:flex;align-items:center;justify-content:center;width:min(100%,calc(100vh - 360px));aspect-ratio:1;margin:0 auto;border:1px solid var(--cp-line);border-radius:6px;background:var(--paper)}
+@media(max-height:700px){#sheet{width:min(100%,calc(100svh - 348px))}}
+#out #sheet svg{height:92%;width:auto;max-width:92%}
+#drawBox #grid,#anim,#bookFrame,#sheet{margin-left:0;margin-right:0}
+#out .row.nav .next{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+
+/* Contact sheet: page shadow like the book, and click for a large preview in the same viewer */
+#sheet{cursor:pointer}
+#sheet svg{box-shadow:0 1px 6px rgba(0,0,0,.25)}
+#bookPreview.sheet .bp-nav,#bookPreview.sheet #bpMode{display:none}
+#bookPreview.sheet .bp-stage svg{display:block;height:100%;width:auto;max-width:100%;box-shadow:0 6px 30px rgba(0,0,0,.5)}
+
+/* a quiet count line under the Next row */
+.tally{margin:8px 0 0;font-size:12px;color:#555}
+.tally:empty{display:none}
+
+/* The count of ways sits under the make button on Draw, and is hidden once the results show (the steps carry their own count) */
+#processRow .sub{margin:8px 0 0;color:#555;font-size:12px}
+body.view-results #processRow .sub{display:none}
+
+/* Panel in Spot's organisation: a header with a status line, then cards with small-caps labels */
+.cp-head h1{margin:0;font-size:15px;font-weight:400}
+.cp-now{margin:2px 0 0;font-size:12px;color:var(--cp-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .cp-sec{margin:12px 0 0;padding:12px;border:1px solid #24272b;border-radius:12px;background:var(--cp-surface);font-size:12px}
+#panel .cp-sec h3{margin:0 0 8px;font-size:11px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:var(--cp-muted)}
+#secDraw h3::before{content:"Shapes and grid"}
+body.view-results #secDraw h3::before{content:"Treatment and grid"}
+#panel #toolsHostPanel:empty{display:none}
+#panel #sizeHostPanel{margin:8px 0 0}
+#panel #codeBox{margin:12px 0 0}
+#panel #codeBox .code-row:first-of-type .lab{display:none}
+#panel #dlHelp{border-top:1px solid #24272b;margin:12px 0 0;padding:12px;color:#9a9a9a}
+#panel #dlHelp h3{margin:0 0 6px}
+#panel #secAnim #gifHostPanel,#panel #secAnim #spdHostPanel{margin:0 0 8px}
+#panel #secAnim #spdHostPanel{margin:0}
+#secDraw:has(#toolsHostPanel:empty) h3::before{content:"Grid"}
+/* Contact sheet preview: zoom and pan */
+#bookPreview.sheet .bp-stage{overflow:hidden;touch-action:none;cursor:grab;position:relative}
+#bookPreview.sheet .bp-stage svg{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;box-shadow:0 6px 30px rgba(0,0,0,.5)}
+#bpZoom{display:none;align-items:center;justify-content:center;gap:10px}
+#bookPreview.sheet #bpZoom{display:flex}
+#bookPreview.sheet .bp-nav{display:flex}
+#bookPreview.sheet #bpPrev,#bookPreview.sheet #bpNext,#bookPreview.sheet #bpPos{display:none}
+
+#panel #ruleHint{margin:8px 0 0;color:var(--cp-muted)}
+#viewIcons a[hidden]{display:none}
+#ruleSentence{margin:0;font-size:14px;line-height:1.9;color:var(--cp-text)}
+#panel .rule-word{display:inline;padding:0 2px;border:0;border-bottom:1px dashed var(--cp-accent-line);border-radius:0;background:none;font:inherit;color:var(--yellow);cursor:pointer}
+#panel .rule-word.none{color:var(--cp-muted);border-bottom-color:#555}
+#panel .rule-word:hover{background:var(--cp-accent-bg)}

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>telex</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body>
+<script>if (!location.search) document.documentElement.classList.add("show-start");</script>
+<div id="startScreen">
+  <button type="button" id="startOpen" aria-label="Open telex"><span>open</span></button>
+  <a class="start-version" id="startVersion" href="changelog.html" title="Changelog"></a>
+  <div class="start-drawer" id="startDrawer">
+    <button type="button" class="start-strip" id="startStrip" aria-expanded="false" aria-controls="startPanel" aria-label="About telex">
+      <span class="strip-label">telex · About</span>
+      <span class="strip-icon" aria-hidden="true">+</span>
+    </button>
+    <aside class="start-panel" id="startPanel" aria-label="About telex">
+      <div class="sa-content" id="startAboutContent"><p><a href="about.html">About telex</a></p></div>
+      <footer class="sp-foot"><span>© 2026 pkwr</span><a href="about.html">Open as a page</a></footer>
+    </aside>
+  </div>
+</div>
+<main id="stage"><canvas id="cv" width="1200" height="800" aria-label="Image set in running text"></canvas></main>
+<section id="panel">
+  <button class="cp-grab" id="grab" aria-label="Collapse controls" aria-expanded="true"><span></span></button>
+  <div class="cp-head"><h1>telex</h1><p class="cp-now">prototype</p></div>
+  <div class="cp-body">
+    <div class="cp-sec"><h3>Image</h3>
+      <select id="img" aria-label="Image"></select>
+    </div>
+    <div class="cp-sec"><h3>Angle</h3>
+      <label>Tilt, top away <output id="o_tilt"></output><input id="tilt" type="range" min="0" max="75" value="0"></label>
+      <label>Turn, left or right <output id="o_yaw"></output><input id="yaw" type="range" min="-75" max="75" value="0"></label>
+      <label>Sweep from straight on<select id="sweep"><option value="off">Off</option><option value="tilt">Tilt</option><option value="yaw">Turn</option><option value="both">Both</option></select></label>
+      <label>Perspective, 0 is parallel <output id="o_persp"></output><input id="persp" type="range" min="0" max="30" value="10"></label>
+      <button type="button" id="axo">Axonometric view (35° tilt, 45° turn, parallel)</button>
+    </div>
+    <div class="cp-sec"><h3>Advance</h3>
+      <select id="mode" aria-label="Advance">
+        <option value="cols">Columns: letters flow down each column</option>
+        <option value="rows">Rows: one running text per band</option>
+        <option value="cell">Per cell: each cell steps its own text</option>
+        <option value="crawl">Crawl: whole lines scroll to the front</option>
+      </select>
+      <label class="tick"><input id="rev" type="checkbox"> Reverse (away from the front)</label>
+      <label class="tick"><input id="rain" type="checkbox"> Rain: drops run along the columns (Reverse for up)</label>
+      <label>Speed, letters per second <output id="o_speed"></output><input id="speed" type="range" min="0" max="30" value="6"></label>
+    </div>
+    <div class="cp-sec"><h3>Grid and tone</h3>
+      <label>Cell size <output id="o_cell"></output><input id="cell" type="range" min="10" max="40" value="18"></label>
+      <label>Tone bands <output id="o_bands"></output><input id="bands" type="range" min="1" max="3" value="3"></label>
+      <label>Blank below tone <output id="o_blank"></output><input id="blank" type="range" min="0" max="40" value="6"></label>
+    </div>
+    <div class="cp-sec"><h3>Text</h3>
+      <label>Darkest band<textarea id="t0"></textarea></label>
+      <label>Middle band<textarea id="t1"></textarea></label>
+      <label>Lightest band<textarea id="t2"></textarea></label>
+    </div>
+    <div class="cp-sec"><h3>Colour</h3>
+      <select id="cmode" aria-label="Colour"><option value="mono">Mono: foreground by tone</option><option value="src">Colour from the image</option></select>
+      <div id="colours"><label class="swatch">Background <input id="bg" type="color" value="#0b0b0b"></label><label class="swatch">Foreground <input id="fg" type="color" value="#f2f2f2"></label></div>
+    </div>
+  </div>
+  <div class="cp-foot"><p class="hint"><span class="keys">D hides this panel · </span><a href="about.html">About</a> · <a href="changelog.html">v0.1</a></p></div>
+</section>
+<script src="start.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
