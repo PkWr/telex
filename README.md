@@ -1,6 +1,6 @@
 # telex
 
-telex is tooling by Patrick Walker that sets an image in running text. Where an ASCII effect picks each character by tone, telex draws every character from a text, so each cell reads through its text one letter at a time. Tone bands choose which text a cell uses. The grid can be tilted and turned, with perspective or in parallel (axonometric), and the letters can run along the columns or fall as rain.
+telex is tooling by Patrick Walker that sets an image in running text. Where an ASCII effect picks each character by tone, telex draws every character from a text, so each cell reads through its text one letter at a time. Tone bands choose which text a cell uses. The grid can be tilted and turned, with perspective or in parallel (axonometric), and the letters can run along columns, rows, single cells or whole lines.
 
 Live at https://telex.pkwr.co (prototype).
 

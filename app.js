@@ -9,7 +9,7 @@
   $("t1").value = "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife. However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families. ";
   $("t2").value = "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it. ";
   for (let i = 1; i <= N; i++) { const o = document.createElement("option"); o.value = i; o.textContent = "Demo " + i; $("img").appendChild(o); }
-  let rainSpd, rainTrail, rainOff, cols, rows, cw, chh, lum, css, band, rankRow, colStart, cellStart, bodies, dirty = true, lastStep = -1, IM = null;
+  let cols, rows, cw, chh, lum, css, band, rankRow, colStart, cellStart, bodies, dirty = true, lastStep = -1, IM = null;
   function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function prepText() { bodies = [0, 1, 2].map(i => { const s = Array.from($("t" + i).value.replace(/\s+/g, " ").trim() + " "); return s.length > 1 ? s : [" "]; }); }
   function loadImg() {
@@ -31,8 +31,6 @@
     for (let i = 0; i < n; i++) { const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2]; const l = (.299 * r + .587 * g + .114 * b) / 255; lum[i] = l; if (l < mn) mn = l; if (l > mx) mx = l; css[i] = `rgb(${r},${g},${b})`; }
     const span = Math.max(.01, mx - mn); for (let i = 0; i < n; i++) lum[i] = (lum[i] - mn) / span;
     const R = rng(7); colStart = new Int32Array(cols); for (let c = 0; c < cols; c++) colStart[c] = Math.floor(R() * 1e6);
-    rainSpd = new Float32Array(cols); rainTrail = new Int32Array(cols); rainOff = new Float32Array(cols);
-    for (let c = 0; c < cols; c++) { rainSpd[c] = 0.6 + 0.8 * R(); rainTrail[c] = 6 + Math.floor(R() * 12); rainOff[c] = R() * 1000; }
     cellStart = new Int32Array(n); for (let i = 0; i < n; i++) cellStart[i] = Math.floor(R() * 1e6);
     rebuild();
   }
@@ -43,7 +41,7 @@
     dirty = true;
   }
   let PX = 0, PY = 0;
-  function draw(step, T) {
+  function draw(step) {
     const phi = $("tilt").value * Math.PI / 180, psi = $("yaw").value * Math.PI / 180;
     const cP = Math.cos(phi), sP = Math.sin(phi), cY = Math.cos(psi), sY = Math.sin(psi), f = +$("persp").value === 0 ? 1e7 : H * (+$("persp").value / 10);
     const Hp = rows * chh, Wp = cols * cw, mode = $("mode").value, dir = $("rev").checked ? -1 : 1, mono = $("cmode").value === "mono";
@@ -58,8 +56,6 @@
     const proj = (x, y) => { const p = rot(x, y), s = f / (f + p[2] - zmin); PX = ox + k * p[0] * s; PY = oy - k * p[1] * s; };
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = $("bg").value; ctx.fillRect(0, 0, W, H);
     ctx.font = FONT.replace("SIZE", Math.round(chh * 0.95)); ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    const rain = $("rain").checked, head = new Float32Array(cols);
-    if (rain) for (let c = 0; c < cols; c++) { const pr = (T * rainSpd[c] + rainOff[c]) % (rows + rainTrail[c] + 8); head[c] = dir > 0 ? pr : rows - 1 - pr; }
     const fg = $("fg").value; ctx.fillStyle = fg; const lineStep = Math.floor(step / 4);
     for (let r = 0; r < rows; r++) {
       const y = Hp / 2 - (r + .5) * chh;
@@ -76,7 +72,6 @@
         proj(x + 1, y); const a0 = PX - e0, b0 = PY - f0;
         proj(x, y - 1); const c0 = PX - e0, d0 = PY - f0;
         let al = mono ? 0.25 + 0.75 * lum[i] : 1, col = mono ? fg : css[i];
-        if (rain) { const d = dir > 0 ? head[c] - r : r - head[c]; if (d >= 0 && d < 1) { col = mono ? "#ffe100" : "#fff"; al = 1; } else al *= Math.max(0.07, d >= 0 && d < rainTrail[c] ? 1 - d / rainTrail[c] : 0); }
         ctx.globalAlpha = al; ctx.fillStyle = col;
         ctx.setTransform(a0, b0, c0, d0, e0, f0); ctx.fillText(ch, 0, 0);
       }
@@ -87,7 +82,7 @@
   $("cell").addEventListener("input", resample);
   ["bands", "blank"].forEach(id => $(id).addEventListener("input", rebuild));
   ["t0", "t1", "t2"].forEach(id => $(id).addEventListener("input", () => { prepText(); dirty = true; }));
-  ["tilt", "yaw", "persp", "speed", "rain", "mode", "rev", "cmode", "bg", "fg"].forEach(id => $(id).addEventListener("input", () => dirty = true));
+  ["tilt", "yaw", "persp", "speed", "mode", "rev", "cmode", "bg", "fg"].forEach(id => $(id).addEventListener("input", () => dirty = true));
   $("axo").addEventListener("click", () => { $("tilt").value = 35; $("yaw").value = 45; $("persp").value = 0; $("sweep").value = "off"; dirty = true; });
   const panel = $("panel");
   $("grab").addEventListener("click", () => { const c = panel.classList.toggle("collapsed"); $("grab").setAttribute("aria-expanded", String(!c)); });
@@ -102,8 +97,8 @@
     const sw = $("sweep").value;
     if (sw === "tilt" || sw === "both") { const p = (now / 8000) % 1; $("tilt").value = Math.round(75 * (0.5 - 0.5 * Math.cos(p * 2 * Math.PI))); dirty = true; }
     if (sw === "yaw" || sw === "both") { const p = (now / 11000) % 1; $("yaw").value = Math.round(75 * (0.5 - 0.5 * Math.cos(p * 2 * Math.PI))); dirty = true; }
-    out(); const T = now / 1000 * $("speed").value, step = Math.floor(T);
-    if (lum && (dirty || step !== lastStep || ($("rain").checked && +$("speed").value > 0))) { lastStep = step; dirty = false; draw(step, T); }
+    out(); const step = Math.floor(now / 1000 * $("speed").value);
+    if (lum && (dirty || step !== lastStep)) { lastStep = step; dirty = false; draw(step); }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
